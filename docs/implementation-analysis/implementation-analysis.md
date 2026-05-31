@@ -10,3 +10,4 @@ Documentazione delle decisioni architetturali e implementative del progetto, pro
 ## Implementazione
 
 - [Data Model](./model-proposal.md) — schema Drizzle, tabelle, enums e note di design
+- [API Surface](./api-surface.md) — endpoint REST, convenzioni di paginazione e flusso di approvazione
