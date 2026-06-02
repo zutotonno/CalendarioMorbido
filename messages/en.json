@@ -1,0 +1,165 @@
+{
+  "nav": {
+    "myCalendar": "My calendar",
+    "proposeShort": "Propose",
+    "propose": "Propose an event",
+    "manage": "Manage",
+    "manageArea": "Manage area",
+    "logout": "Sign out",
+    "login": "Sign in",
+    "menu": "Menu",
+    "language": "Language"
+  },
+  "footer": {
+    "tagline": "CalendarioMorbido · MVP · slow rides in Italy 🌿"
+  },
+  "home": {
+    "title": "Public calendar",
+    "subtitle": "Non-competitive cycle-touring rides in Italy",
+    "loadError": "Error loading events. Have you configured Supabase? ({message})"
+  },
+  "filters": {
+    "title": "Filters",
+    "show": "Show ▼",
+    "hide": "Hide ▲",
+    "duration": "Duration",
+    "all": "All",
+    "oneDay": "One day",
+    "multiDay": "Multi-day",
+    "region": "Region",
+    "allRegions": "All regions",
+    "reset": "Clear filters"
+  },
+  "calendar": {
+    "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    "oneDay": "One day",
+    "multiDay": "Multi-day",
+    "saved": "Saved",
+    "savedTitle": "Saved to your calendar",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "eventsOf": "Events in {month}",
+    "noEventsMonth": "No events this month.",
+    "noEventsFilters": "No events match these filters."
+  },
+  "card": {
+    "oneDay": "One day",
+    "multiDay": "Multi-day",
+    "savedBadge": "✓ In my calendar"
+  },
+  "event": {
+    "back": "← Back to calendar",
+    "description": "Description",
+    "route": "Route",
+    "officialSite": "🔗 Official event website",
+    "open": "Open →",
+    "loginToSave": "Sign in to save the event",
+    "edit": "✏️ Edit event"
+  },
+  "save": {
+    "add": "Add to my calendar",
+    "saved": "✓ Saved to my calendar",
+    "loading": "...",
+    "toastSaved": "Saved to your calendar",
+    "toastRemoved": "Removed from your calendar"
+  },
+  "delete": {
+    "button": "🗑️ Delete event",
+    "confirmText": "Delete this event? It will also disappear from users' personal calendars. This action is irreversible.",
+    "confirm": "Confirm deletion",
+    "cancel": "Cancel",
+    "deleting": "Deleting…",
+    "error": "Could not delete the event."
+  },
+  "myCalendar": {
+    "title": "My calendar",
+    "propose": "+ Propose",
+    "savedTab": "Saved ({count})",
+    "proposalsTab": "My proposals ({count})",
+    "noSaved": "You haven't saved any events yet.",
+    "explore": "Explore the calendar",
+    "noProposals": "You haven't proposed any events yet.",
+    "proposeFirst": "Propose the first one",
+    "reason": "Reason: {reason}"
+  },
+  "manage": {
+    "title": "Manage area",
+    "subtitle": "Event publication requests.",
+    "tabPending": "To review",
+    "tabApproved": "Approved",
+    "tabRejected": "Rejected",
+    "empty": "No proposals in this state.",
+    "reason": "Reason: {reason}"
+  },
+  "adminCard": {
+    "officialSite": "Official website ↗",
+    "rejectReason": "Rejection reason (optional)",
+    "confirmReject": "Confirm rejection",
+    "cancel": "Cancel",
+    "approve": "Approve",
+    "reject": "Reject",
+    "loading": "...",
+    "toastApproved": "Proposal approved and published",
+    "toastRejected": "Proposal rejected"
+  },
+  "status": {
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected"
+  },
+  "form": {
+    "name": "Event name *",
+    "description": "Description",
+    "startDate": "Start date *",
+    "endDate": "End date *",
+    "region": "Region *",
+    "select": "Select…",
+    "start": "Start *",
+    "comune": "Town",
+    "provincia": "Province",
+    "end": "Finish (optional)",
+    "officialUrl": "Official link",
+    "cover": "Cover image",
+    "removeImage": "Remove image",
+    "uploading": "Uploading…",
+    "imageReady": "✓ Image ready",
+    "saving": "Saving…",
+    "toastImageUploaded": "Image uploaded",
+    "toastUploadError": "Error during upload."
+  },
+  "propose": {
+    "title": "Propose an event",
+    "subtitle": "Your proposal will be reviewed by a manager before publication.",
+    "submit": "Submit proposal"
+  },
+  "editEvent": {
+    "back": "← Back to event",
+    "title": "Edit event",
+    "submit": "Save changes"
+  },
+  "auth": {
+    "loginTitle": "Sign in",
+    "loginSubtitle": "Sign in to save events and propose rides.",
+    "noAccount": "Don't have an account?",
+    "register": "Register",
+    "registerTitle": "Register",
+    "registerSubtitle": "Create an account for your personal calendar.",
+    "createAccount": "Create account",
+    "haveAccount": "Already have an account?",
+    "login": "Sign in",
+    "email": "Email",
+    "password": "Password",
+    "loading": "..."
+  },
+  "errors": {
+    "loginRequired": "You must sign in to propose an event.",
+    "invalidRegion": "Select a valid region.",
+    "datesRequired": "Dates are required.",
+    "endBeforeStart": "The end date cannot be before the start date.",
+    "requiredFields": "Title, town and province of the start are required.",
+    "badCredentials": "Incorrect email or password.",
+    "passwordTooShort": "The password must be at least 6 characters.",
+    "saveLoginRequired": "You must sign in to save an event.",
+    "loginRequiredShort": "You must sign in."
+  }
+}

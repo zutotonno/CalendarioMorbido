@@ -24,17 +24,17 @@ prototype/wireframes/calendariomorbido-wireframes.html  # Interactive HTML proto
 
 ## Tech Stack (decided)
 
-| Layer | Choice |
-| --- | --- |
-| Hosting | Railway (all services) |
-| Frontend | Next.js (TypeScript), server-side rendered |
-| Backend | Fastify (TypeScript), separate Railway service |
-| Database | PostgreSQL on Railway |
-| ORM / Migrations | Drizzle ORM + drizzle-kit |
-| Auth | Better Auth (self-hosted, runs inside Fastify) |
-| Map rendering | MapLibre GL JS |
-| Map tiles | MapTiler (free tier, OSM-based) |
-| Blob storage | Provider-agnostic via `StorageService` interface (key-based, not URL-based) |
+| Layer            | Choice                                                                      |
+| ---------------- | --------------------------------------------------------------------------- |
+| Hosting          | Railway (all services)                                                      |
+| Frontend         | Next.js (TypeScript), server-side rendered                                  |
+| Backend          | Fastify (TypeScript), separate Railway service                              |
+| Database         | PostgreSQL on Railway                                                       |
+| ORM / Migrations | Drizzle ORM + drizzle-kit                                                   |
+| Auth             | Better Auth (self-hosted, runs inside Fastify)                              |
+| Map rendering    | MapLibre GL JS                                                              |
+| Map tiles        | MapTiler (free tier, OSM-based)                                             |
+| Blob storage     | Provider-agnostic via `StorageService` interface (key-based, not URL-based) |
 
 Migrations run as a pre-start command on Railway: `npx drizzle-kit migrate && node server.js`.
 
@@ -73,15 +73,23 @@ Full endpoint details: `docs/implementation-analysis/api-surface.md`.
 
 The wireframes explore two layout variants per screen — none have been chosen yet:
 
-| Screen | Variant A | Variant B |
-| --- | --- | --- |
-| Public Calendar | Density (list-heavy) | Visual exploration (card grid) |
-| Map View | Immersive (map primary) | Hybrid (split map/list) |
-| Event Details | Hero image layout | Structured card layout |
-| Personal Calendar | Agenda view | Grid with tabs |
-| Propose Event | Single long form | Step wizard |
-| Admin Queue | Inline actions | Single-event review |
+| Screen            | Variant A               | Variant B                      |
+| ----------------- | ----------------------- | ------------------------------ |
+| Public Calendar   | Density (list-heavy)    | Visual exploration (card grid) |
+| Map View          | Immersive (map primary) | Hybrid (split map/list)        |
+| Event Details     | Hero image layout       | Structured card layout         |
+| Personal Calendar | Agenda view             | Grid with tabs                 |
+| Propose Event     | Single long form        | Step wizard                    |
+| Admin Queue       | Inline actions          | Single-event review            |
 
 Other open design questions: mandatory vs optional fields in the proposal form, login/registration flow.
 
 Mobile-first. Warm paper aesthetic with cycling-green hi-vis accent. Italian-language UI throughout.
+
+## HOW TO MANAGE DOCS
+
+In this mvp phase ignore all the `docs/archive` folder, since it is a brainstorming for a further project phase, not needed for now.
+
+## LANGUAGE
+
+even if I talk to claude code throught terminal in other languages, always produce code artifacts, documentation, commit messages and all the persisted information about this project in English.

@@ -1,0 +1,165 @@
+{
+  "nav": {
+    "myCalendar": "Il mio calendario",
+    "proposeShort": "Proponi",
+    "propose": "Proponi un evento",
+    "manage": "Gestore",
+    "manageArea": "Area gestore",
+    "logout": "Esci",
+    "login": "Accedi",
+    "menu": "Menu",
+    "language": "Lingua"
+  },
+  "footer": {
+    "tagline": "CalendarioMorbido · MVP · pedalate lente in Italia 🌿"
+  },
+  "home": {
+    "title": "Calendario pubblico",
+    "subtitle": "Pedalate cicloturistiche non competitive in Italia",
+    "loadError": "Errore nel caricamento degli eventi. Hai configurato Supabase? ({message})"
+  },
+  "filters": {
+    "title": "Filtri",
+    "show": "Mostra ▼",
+    "hide": "Nascondi ▲",
+    "duration": "Durata",
+    "all": "Tutte",
+    "oneDay": "Un giorno",
+    "multiDay": "Più giorni",
+    "region": "Regione",
+    "allRegions": "Tutte le regioni",
+    "reset": "Azzera filtri"
+  },
+  "calendar": {
+    "weekdays": ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"],
+    "oneDay": "Un giorno",
+    "multiDay": "Più giorni",
+    "saved": "Salvato",
+    "savedTitle": "Salvato nel tuo calendario",
+    "prevMonth": "Mese precedente",
+    "nextMonth": "Mese successivo",
+    "eventsOf": "Eventi di {month}",
+    "noEventsMonth": "Nessun evento in questo mese.",
+    "noEventsFilters": "Nessun evento trovato con questi filtri."
+  },
+  "card": {
+    "oneDay": "Un giorno",
+    "multiDay": "Più giorni",
+    "savedBadge": "✓ Nel mio calendario"
+  },
+  "event": {
+    "back": "← Torna al calendario",
+    "description": "Descrizione",
+    "route": "Percorso",
+    "officialSite": "🔗 Sito ufficiale dell'evento",
+    "open": "Apri →",
+    "loginToSave": "Accedi per salvare l'evento",
+    "edit": "✏️ Modifica evento"
+  },
+  "save": {
+    "add": "Aggiungi al mio calendario",
+    "saved": "✓ Salvato nel mio calendario",
+    "loading": "...",
+    "toastSaved": "Salvato nel tuo calendario",
+    "toastRemoved": "Rimosso dal tuo calendario"
+  },
+  "delete": {
+    "button": "🗑️ Elimina evento",
+    "confirmText": "Eliminare questo evento? Sparirà anche dai calendari personali degli utenti. L'azione è irreversibile.",
+    "confirm": "Conferma eliminazione",
+    "cancel": "Annulla",
+    "deleting": "Eliminazione…",
+    "error": "Impossibile eliminare l'evento."
+  },
+  "myCalendar": {
+    "title": "Il mio calendario",
+    "propose": "+ Proponi",
+    "savedTab": "Salvati ({count})",
+    "proposalsTab": "Le mie proposte ({count})",
+    "noSaved": "Non hai ancora salvato eventi.",
+    "explore": "Esplora il calendario",
+    "noProposals": "Non hai ancora proposto eventi.",
+    "proposeFirst": "Proponi il primo",
+    "reason": "Motivo: {reason}"
+  },
+  "manage": {
+    "title": "Area gestore",
+    "subtitle": "Richieste di pubblicazione eventi.",
+    "tabPending": "Da approvare",
+    "tabApproved": "Approvate",
+    "tabRejected": "Rifiutate",
+    "empty": "Nessuna proposta in questo stato.",
+    "reason": "Motivo: {reason}"
+  },
+  "adminCard": {
+    "officialSite": "Sito ufficiale ↗",
+    "rejectReason": "Motivo del rifiuto (opzionale)",
+    "confirmReject": "Conferma rifiuto",
+    "cancel": "Annulla",
+    "approve": "Approva",
+    "reject": "Rifiuta",
+    "loading": "...",
+    "toastApproved": "Proposta approvata e pubblicata",
+    "toastRejected": "Proposta rifiutata"
+  },
+  "status": {
+    "pending": "In sospeso",
+    "approved": "Approvato",
+    "rejected": "Rifiutato"
+  },
+  "form": {
+    "name": "Nome evento *",
+    "description": "Descrizione",
+    "startDate": "Data inizio *",
+    "endDate": "Data fine *",
+    "region": "Regione *",
+    "select": "Seleziona…",
+    "start": "Partenza *",
+    "comune": "Comune",
+    "provincia": "Provincia",
+    "end": "Arrivo (opzionale)",
+    "officialUrl": "Link ufficiale",
+    "cover": "Immagine di copertina",
+    "removeImage": "Rimuovi immagine",
+    "uploading": "Caricamento…",
+    "imageReady": "✓ Immagine pronta",
+    "saving": "Salvataggio…",
+    "toastImageUploaded": "Immagine caricata",
+    "toastUploadError": "Errore durante il caricamento."
+  },
+  "propose": {
+    "title": "Proponi un evento",
+    "subtitle": "La tua proposta sarà rivista dal gestore prima della pubblicazione.",
+    "submit": "Invia proposta"
+  },
+  "editEvent": {
+    "back": "← Torna all'evento",
+    "title": "Modifica evento",
+    "submit": "Salva modifiche"
+  },
+  "auth": {
+    "loginTitle": "Accedi",
+    "loginSubtitle": "Entra per salvare eventi e proporre pedalate.",
+    "noAccount": "Non hai un account?",
+    "register": "Registrati",
+    "registerTitle": "Registrati",
+    "registerSubtitle": "Crea un account per il tuo calendario personale.",
+    "createAccount": "Crea account",
+    "haveAccount": "Hai già un account?",
+    "login": "Accedi",
+    "email": "Email",
+    "password": "Password",
+    "loading": "..."
+  },
+  "errors": {
+    "loginRequired": "Devi accedere per proporre un evento.",
+    "invalidRegion": "Seleziona una regione valida.",
+    "datesRequired": "Le date sono obbligatorie.",
+    "endBeforeStart": "La data di fine non può precedere quella di inizio.",
+    "requiredFields": "Titolo, comune e provincia di partenza sono obbligatori.",
+    "badCredentials": "Email o password non corretti.",
+    "passwordTooShort": "La password deve avere almeno 6 caratteri.",
+    "saveLoginRequired": "Devi accedere per salvare un evento.",
+    "loginRequiredShort": "Devi accedere."
+  }
+}
