@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { saveEvent, unsaveEvent } from "@/lib/actions/saved-events";
 import { useToast } from "@/components/ui/Toast";
 
@@ -14,6 +15,7 @@ export default function SaveButton({
   const [saved, setSaved] = useState(initialSaved);
   const [pending, startTransition] = useTransition();
   const { showToast } = useToast();
+  const t = useTranslations("save");
 
   function toggle() {
     startTransition(async () => {
@@ -23,10 +25,7 @@ export default function SaveButton({
         return;
       }
       setSaved(!saved);
-      showToast(
-        saved ? "Rimosso dal tuo calendario" : "Salvato nel tuo calendario",
-        "success",
-      );
+      showToast(saved ? t("toastRemoved") : t("toastSaved"), "success");
     });
   }
 
@@ -36,11 +35,7 @@ export default function SaveButton({
       disabled={pending}
       className={`btn w-full ${saved ? "btn-ghost" : "btn-primary"} disabled:opacity-60`}
     >
-      {pending
-        ? "..."
-        : saved
-          ? "✓ Salvato nel mio calendario"
-          : "Aggiungi al mio calendario"}
+      {pending ? t("loading") : saved ? t("saved") : t("add")}
     </button>
   );
 }

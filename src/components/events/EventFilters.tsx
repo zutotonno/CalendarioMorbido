@@ -2,12 +2,14 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { REGIONS } from "@/lib/constants/regions";
 
 export default function EventFilters() {
   const router = useRouter();
   const params = useSearchParams();
   const [open, setOpen] = useState(false);
+  const t = useTranslations("filters");
 
   const region = params.get("region") ?? "";
   const duration = params.get("duration") ?? "";
@@ -28,46 +30,49 @@ export default function EventFilters() {
         onClick={() => setOpen((o) => !o)}
         className="flex w-full items-center justify-between font-head text-xl"
       >
-        <span>Filtri{hasFilters ? " ·" : ""}</span>
+        <span>
+          {t("title")}
+          {hasFilters ? " ·" : ""}
+        </span>
         <span className="font-body text-sm text-ink-soft">
-          {open ? "Nascondi ▲" : "Mostra ▼"}
+          {open ? t("hide") : t("show")}
         </span>
       </button>
 
       {open && (
         <div className="mt-3 space-y-4">
           <div>
-            <p className="field-label">Durata</p>
+            <p className="field-label">{t("duration")}</p>
             <div className="flex flex-wrap gap-2">
               <button
                 className={`chip ${duration === "" ? "chip-active" : ""}`}
                 onClick={() => update("duration", "")}
               >
-                Tutte
+                {t("all")}
               </button>
               <button
                 className={`chip ${duration === "single" ? "chip-active" : ""}`}
                 onClick={() => update("duration", "single")}
               >
-                Un giorno
+                {t("oneDay")}
               </button>
               <button
                 className={`chip ${duration === "multi" ? "chip-active" : ""}`}
                 onClick={() => update("duration", "multi")}
               >
-                Più giorni
+                {t("multiDay")}
               </button>
             </div>
           </div>
 
           <div>
-            <p className="field-label">Regione</p>
+            <p className="field-label">{t("region")}</p>
             <select
               className="field-input"
               value={region}
               onChange={(e) => update("region", e.target.value)}
             >
-              <option value="">Tutte le regioni</option>
+              <option value="">{t("allRegions")}</option>
               {REGIONS.map((r) => (
                 <option key={r} value={r}>
                   {r}
@@ -81,7 +86,7 @@ export default function EventFilters() {
               className="font-body text-sm text-accent-deep underline"
               onClick={() => router.push("/")}
             >
-              Azzera filtri
+              {t("reset")}
             </button>
           )}
         </div>

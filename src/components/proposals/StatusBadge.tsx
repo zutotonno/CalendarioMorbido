@@ -1,10 +1,5 @@
+import { useTranslations } from "next-intl";
 import type { ProposalStatus } from "@/lib/types/db";
-
-const LABELS: Record<ProposalStatus, string> = {
-  pending: "In sospeso",
-  approved: "Approvato",
-  rejected: "Rifiutato",
-};
 
 const STYLES: Record<ProposalStatus, string> = {
   pending: "bg-amber-100 text-amber-800",
@@ -13,11 +8,12 @@ const STYLES: Record<ProposalStatus, string> = {
 };
 
 export default function StatusBadge({ status }: { status: ProposalStatus }) {
+  const t = useTranslations("status");
   return (
     <span
       className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${STYLES[status]}`}
     >
-      {LABELS[status]}
+      {t(status)}
     </span>
   );
 }

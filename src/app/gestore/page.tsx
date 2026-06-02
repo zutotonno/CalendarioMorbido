@@ -1,18 +1,21 @@
 import Link from "next/link";
+import { getLocale, getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/require-user";
 import AdminProposalCard from "@/components/admin/AdminProposalCard";
 import StatusBadge from "@/components/proposals/StatusBadge";
 import { formatDateRange } from "@/lib/utils/dates";
 import type { ProposalRow, ProposalStatus } from "@/lib/types/db";
+import type { Locale } from "@/i18n/config";
 
 export const dynamic = "force-dynamic";
 
-const TABS: { key: ProposalStatus; label: string }[] = [
-  { key: "pending", label: "Da approvare" },
-  { key: "approved", label: "Approvate" },
-  { key: "rejected", label: "Rifiutate" },
-];
+const TAB_KEYS: Record<ProposalStatus, "tabPending" | "tabApproved" | "tabRejected"> = {
+  pending: "tabPending",
+  approved: "tabApproved",
+  rejected: "tabRejected",
+};
+const TAB_ORDER: ProposalStatus[] = ["pending", "approved", "rejected"];
 
 export default async function GestorePage({
   searchParams,
@@ -23,6 +26,8 @@ export default async function GestorePage({
   const { status } = await searchParams;
   const active: ProposalStatus =
     status === "approved" || status === "rejected" ? status : "pending";
+  const t = await getTranslations("manage");
+  const locale = (await getLocale()) as Locale;
 
   const supabase = await createClient();
   const { data } = await supabase
@@ -35,30 +40,30 @@ export default async function GestorePage({
 
   return (
     <div className="space-y-4">
-      <h1 className="font-head text-4xl font-bold leading-none">Area gestore</h1>
-      <p className="font-body text-ink-soft">
-        Richieste di pubblicazione eventi.
-      </p>
+      <h1 className="font-head text-4xl font-bold leading-none">
+        {t("title")}
+      </h1>
+      <p className="font-body text-ink-soft">{t("subtitle")}</p>
 
       <div className="flex gap-2 border-b border-line">
-        {TABS.map((t) => (
+        {TAB_ORDER.map((key) => (
           <Link
-            key={t.key}
-            href={`/gestore?status=${t.key}`}
+            key={key}
+            href={`/gestore?status=${key}`}
             className={`-mb-px border-b-2 px-3 py-2 font-body ${
-              active === t.key
+              active === key
                 ? "border-accent-deep text-ink"
                 : "border-transparent text-ink-soft"
             }`}
           >
-            {t.label}
+            {t(TAB_KEYS[key])}
           </Link>
         ))}
       </div>
 
       {proposals.length === 0 ? (
         <p className="py-12 text-center font-body text-ink-soft">
-          Nessuna proposta in questo stato.
+          {t("empty")}
         </p>
       ) : active === "pending" ? (
         <ul className="space-y-3">
@@ -74,11 +79,12 @@ export default async function GestorePage({
                 <div className="min-w-0">
                   <p className="font-head text-lg leading-tight">{p.title}</p>
                   <p className="font-body text-sm text-ink-soft">
-                    {p.region} · {formatDateRange(p.start_date, p.end_date)}
+                    {p.region} ·{" "}
+                    {formatDateRange(p.start_date, p.end_date, locale)}
                   </p>
                   {p.status === "rejected" && p.rejection_reason && (
                     <p className="mt-1 font-body text-sm text-red-700">
-                      Motivo: {p.rejection_reason}
+                      {t("reason", { reason: p.rejection_reason })}
                     </p>
                   )}
                 </div>

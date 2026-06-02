@@ -1,13 +1,4 @@
-const FMT = new Intl.DateTimeFormat("it-IT", {
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-});
-
-const FMT_SHORT = new Intl.DateTimeFormat("it-IT", {
-  day: "numeric",
-  month: "short",
-});
+import { BCP47, type Locale } from "@/i18n/config";
 
 // Le date arrivano come "YYYY-MM-DD"; le interpretiamo come date locali (no UTC shift).
 function parse(dateStr: string): Date {
@@ -19,21 +10,29 @@ export function isSingleDay(start: string, end: string): boolean {
   return start === end;
 }
 
-export function formatItalianDate(dateStr: string): string {
-  return FMT.format(parse(dateStr));
+export function formatLongDate(dateStr: string, locale: Locale = "it"): string {
+  return new Intl.DateTimeFormat(BCP47[locale], {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(parse(dateStr));
 }
 
-// Es. "12 set 2026" oppure "12 – 14 set 2026" / "12 set – 3 ott 2026"
-export function formatDateRange(start: string, end: string): string {
-  if (isSingleDay(start, end)) return formatItalianDate(start);
+// Es. "12 settembre 2026" oppure "12 – 14 settembre 2026" / "12 set – 3 ott 2026"
+export function formatDateRange(
+  start: string,
+  end: string,
+  locale: Locale = "it",
+): string {
+  if (isSingleDay(start, end)) return formatLongDate(start, locale);
   const s = parse(start);
   const e = parse(end);
   if (s.getMonth() === e.getMonth() && s.getFullYear() === e.getFullYear()) {
-    return `${s.getDate()} – ${formatItalianDate(end)}`;
+    return `${s.getDate()} – ${formatLongDate(end, locale)}`;
   }
-  return `${FMT_SHORT.format(s)} – ${formatItalianDate(end)}`;
-}
-
-export function durationLabel(start: string, end: string): string {
-  return isSingleDay(start, end) ? "Un giorno" : "Più giorni";
+  const shortFmt = new Intl.DateTimeFormat(BCP47[locale], {
+    day: "numeric",
+    month: "short",
+  });
+  return `${shortFmt.format(s)} – ${formatLongDate(end, locale)}`;
 }

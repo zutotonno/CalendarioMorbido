@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -17,19 +19,24 @@ export const metadata: Metadata = {
     "Calendario degli eventi cicloturistici non competitivi in Italia. Scopri, salva e proponi pedalate.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="it" className={inter.variable}>
+    <html lang={locale} className={inter.variable}>
       <body className="font-body">
-        <ToastProvider>
-          <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col">
-            <Header />
-            <main className="flex-1 px-4 pb-16 pt-4">{children}</main>
-            <Footer />
-          </div>
-        </ToastProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <ToastProvider>
+            <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col">
+              <Header />
+              <main className="flex-1 px-4 pb-16 pt-4">{children}</main>
+              <Footer />
+            </div>
+          </ToastProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

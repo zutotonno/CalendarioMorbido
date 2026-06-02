@@ -2,54 +2,35 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { REGIONS, type Region } from "@/lib/constants/regions";
-
-function str(fd: FormData, key: string): string {
-  return String(fd.get(key) ?? "").trim();
-}
-function optStr(fd: FormData, key: string): string | null {
-  const v = str(fd, key);
-  return v === "" ? null : v;
-}
+import { readEventContent } from "@/lib/actions/event-fields";
 
 export async function submitProposal(_prev: unknown, formData: FormData) {
   const supabase = await createClient();
+  const t = await getTranslations("errors");
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "Devi accedere per proporre un evento." };
+  if (!user) return { error: t("loginRequired") };
 
-  const region = str(formData, "region");
-  if (!REGIONS.includes(region as Region))
-    return { error: "Seleziona una regione valida." };
+  const content = readEventContent(formData);
 
-  const startDate = str(formData, "start_date");
-  const endDate = str(formData, "end_date");
-  if (!startDate || !endDate) return { error: "Le date sono obbligatorie." };
-  if (endDate < startDate)
-    return { error: "La data di fine non può precedere quella di inizio." };
+  if (!REGIONS.includes(content.region as Region))
+    return { error: t("invalidRegion") };
+  if (!content.start_date || !content.end_date)
+    return { error: t("datesRequired") };
+  if (content.end_date < content.start_date)
+    return { error: t("endBeforeStart") };
+  if (!content.title || !content.start_comune || !content.start_provincia)
+    return { error: t("requiredFields") };
 
-  const payload = {
+  const { error } = await supabase.from("proposals").insert({
+    ...content,
     user_id: user.id,
     status: "pending" as const,
-    title: str(formData, "title"),
-    description: optStr(formData, "description"),
-    start_date: startDate,
-    end_date: endDate,
-    region,
-    official_url: optStr(formData, "official_url"),
-    cover_image_key: optStr(formData, "cover_image_key"),
-    start_comune: str(formData, "start_comune"),
-    start_provincia: str(formData, "start_provincia"),
-    end_comune: optStr(formData, "end_comune"),
-    end_provincia: optStr(formData, "end_provincia"),
-  };
-
-  if (!payload.title || !payload.start_comune || !payload.start_provincia)
-    return { error: "Titolo, comune e provincia di partenza sono obbligatori." };
-
-  const { error } = await supabase.from("proposals").insert(payload);
+  });
   if (error) return { error: error.message };
 
   revalidatePath("/calendario");

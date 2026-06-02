@@ -2,16 +2,12 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import type { EventRow } from "@/lib/types/db";
 import { isSingleDay, formatDateRange } from "@/lib/utils/dates";
 import { formatRoute } from "@/lib/utils/location";
-
-const WEEKDAYS = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
-
-const MONTH_FMT = new Intl.DateTimeFormat("it-IT", {
-  month: "long",
-  year: "numeric",
-});
+import EventCard from "@/components/events/EventCard";
+import { BCP47, type Locale } from "@/i18n/config";
 
 function pad(n: number): string {
   return String(n).padStart(2, "0");
@@ -26,6 +22,32 @@ function occursOn(ev: EventRow, dayStr: string): boolean {
   return ev.start_date <= dayStr && dayStr <= ev.end_date;
 }
 
+type Cell = { date: Date; dayStr: string; inMonth: boolean };
+
+// Posizionamento di un evento all'interno di una settimana (7 celle lun→dom).
+type Segment = {
+  event: EventRow;
+  startIdx: number; // 0-6
+  span: number;
+  continuesLeft: boolean;
+  continuesRight: boolean;
+};
+
+// Assegna i segmenti a corsie (lane) evitando sovrapposizioni di colonne.
+function assignLanes(segments: Segment[]): Segment[][] {
+  const lanes: { lastEnd: number; items: Segment[] }[] = [];
+  for (const seg of segments) {
+    let lane = lanes.find((l) => seg.startIdx > l.lastEnd);
+    if (!lane) {
+      lane = { lastEnd: -1, items: [] };
+      lanes.push(lane);
+    }
+    lane.items.push(seg);
+    lane.lastEnd = seg.startIdx + seg.span - 1;
+  }
+  return lanes.map((l) => l.items);
+}
+
 export default function EventCalendar({
   events,
   savedIds = [],
@@ -34,6 +56,14 @@ export default function EventCalendar({
   savedIds?: string[];
 }) {
   const saved = useMemo(() => new Set(savedIds), [savedIds]);
+  const t = useTranslations("calendar");
+  const locale = useLocale() as Locale;
+  const weekdays = t.raw("weekdays") as string[];
+  const monthFmt = useMemo(
+    () =>
+      new Intl.DateTimeFormat(BCP47[locale], { month: "long", year: "numeric" }),
+    [locale],
+  );
 
   // Mese iniziale: quello del primo evento futuro, altrimenti il mese corrente.
   const today = new Date();
@@ -54,14 +84,14 @@ export default function EventCalendar({
     setSelected(null);
   }
 
-  // Costruzione della griglia (settimane lun→dom).
+  // Costruzione delle settimane (lun→dom).
   const weeks = useMemo(() => {
     const first = new Date(year, month, 1);
     const startOffset = (first.getDay() + 6) % 7; // lunedì = 0
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const totalCells = Math.ceil((startOffset + daysInMonth) / 7) * 7;
 
-    const cells: { date: Date; dayStr: string; inMonth: boolean }[] = [];
+    const cells: Cell[] = [];
     for (let i = 0; i < totalCells; i++) {
       const date = new Date(year, month, 1 - startOffset + i);
       cells.push({
@@ -70,10 +100,22 @@ export default function EventCalendar({
         inMonth: date.getMonth() === month,
       });
     }
-    const rows: (typeof cells)[] = [];
+    const rows: Cell[][] = [];
     for (let i = 0; i < cells.length; i += 7) rows.push(cells.slice(i, i + 7));
     return rows;
   }, [year, month]);
+
+  // Eventi che ricadono (anche parzialmente) nel mese visualizzato.
+  const monthEvents = useMemo(() => {
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const monthStart = ymd(year, month, 1);
+    const monthEnd = ymd(year, month, daysInMonth);
+    return events
+      .filter((e) => e.start_date <= monthEnd && e.end_date >= monthStart)
+      .sort((a, b) => a.start_date.localeCompare(b.start_date));
+  }, [events, year, month]);
+
+  const monthLabel = monthFmt.format(new Date(year, month, 1));
 
   const selectedEvents = selected
     ? events.filter((e) => occursOn(e, selected))
@@ -86,17 +128,17 @@ export default function EventCalendar({
         <button
           onClick={() => shiftMonth(-1)}
           className="chip"
-          aria-label="Mese precedente"
+          aria-label={t("prevMonth")}
         >
           ←
         </button>
         <h2 className="font-head text-2xl font-semibold capitalize">
-          {MONTH_FMT.format(new Date(year, month, 1))}
+          {monthLabel}
         </h2>
         <button
           onClick={() => shiftMonth(1)}
           className="chip"
-          aria-label="Mese successivo"
+          aria-label={t("nextMonth")}
         >
           →
         </button>
@@ -105,25 +147,24 @@ export default function EventCalendar({
       {/* Legenda */}
       <div className="flex flex-wrap gap-3 font-body text-xs text-ink-soft">
         <span className="flex items-center gap-1">
-          <span className="inline-block h-3 w-3 rounded-full bg-accent" /> Un
-          giorno
+          <span className="inline-block h-3 w-4 rounded bg-accent" />{" "}
+          {t("oneDay")}
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block h-3 w-3 rounded-full bg-accent-alt" />{" "}
-          Più giorni
+          <span className="inline-block h-3 w-6 rounded bg-accent-alt" />{" "}
+          {t("multiDay")}
         </span>
         {savedIds.length > 0 && (
           <span className="flex items-center gap-1">
-            <span className="inline-block h-3 w-3 rounded-full bg-paper ring-2 ring-ink" />{" "}
-            Salvato
+            <span className="text-accent-deep">✓</span> {t("saved")}
           </span>
         )}
       </div>
 
-      {/* Griglia */}
+      {/* Griglia calendario */}
       <div className="card overflow-hidden">
         <div className="grid grid-cols-7 border-b border-line bg-paper-soft">
-          {WEEKDAYS.map((w) => (
+          {weekdays.map((w) => (
             <div
               key={w}
               className="py-1.5 text-center font-body text-xs text-ink-soft"
@@ -132,51 +173,120 @@ export default function EventCalendar({
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7">
-          {weeks.flat().map(({ date, dayStr, inMonth }) => {
-            const dayEvents = events.filter((e) => occursOn(e, dayStr));
-            const isToday = dayStr === todayStr;
-            const isSelected = dayStr === selected;
-            return (
-              <button
-                key={dayStr}
-                onClick={() =>
-                  setSelected(
-                    dayEvents.length ? (isSelected ? null : dayStr) : null,
-                  )
-                }
-                className={`flex min-h-[3.5rem] flex-col items-center gap-1 border-b border-r border-line p-1 text-center transition-colors last:border-r-0 sm:min-h-[4.5rem] ${
-                  inMonth ? "" : "bg-paper-soft/40 text-ink-soft"
-                } ${isSelected ? "bg-accent/10" : ""} ${
-                  dayEvents.length ? "cursor-pointer" : "cursor-default"
-                }`}
-              >
-                <span
-                  className={`flex h-6 w-6 items-center justify-center rounded-full font-body text-sm ${
-                    isToday ? "bg-ink text-paper" : ""
-                  }`}
-                >
-                  {date.getDate()}
-                </span>
-                {dayEvents.length > 0 && (
-                  <span className="flex flex-wrap items-center justify-center gap-0.5">
-                    {dayEvents.slice(0, 4).map((e) => (
+
+        {weeks.map((cells, wi) => {
+          const weekStart = cells[0].dayStr;
+          const weekEnd = cells[6].dayStr;
+          const segments: Segment[] = events
+            .filter((e) => e.start_date <= weekEnd && e.end_date >= weekStart)
+            .sort(
+              (a, b) =>
+                a.start_date.localeCompare(b.start_date) ||
+                b.end_date.localeCompare(a.end_date),
+            )
+            .map((e) => {
+              const f = cells.findIndex((c) => c.dayStr === e.start_date);
+              const l = cells.findIndex((c) => c.dayStr === e.end_date);
+              const startIdx = f === -1 ? 0 : f;
+              const endIdx = l === -1 ? 6 : l;
+              return {
+                event: e,
+                startIdx,
+                span: endIdx - startIdx + 1,
+                continuesLeft: e.start_date < weekStart,
+                continuesRight: e.end_date > weekEnd,
+              };
+            });
+          const lanes = assignLanes(segments);
+
+          return (
+            <div key={wi} className="border-b border-line last:border-b-0">
+              {/* Numeri dei giorni */}
+              <div className="grid grid-cols-7">
+                {cells.map(({ date, dayStr, inMonth }) => {
+                  const isToday = dayStr === todayStr;
+                  const isSelected = dayStr === selected;
+                  const hasEvents = events.some((e) => occursOn(e, dayStr));
+                  return (
+                    <button
+                      key={dayStr}
+                      onClick={() =>
+                        setSelected(hasEvents && !isSelected ? dayStr : null)
+                      }
+                      className={`flex justify-center pt-1 ${
+                        hasEvents ? "cursor-pointer" : "cursor-default"
+                      } ${isSelected ? "bg-accent/10" : ""}`}
+                    >
                       <span
-                        key={e.id}
-                        className={`inline-block h-2 w-2 rounded-full ${
-                          isSingleDay(e.start_date, e.end_date)
-                            ? "bg-accent"
-                            : "bg-accent-alt"
-                        } ${saved.has(e.id) ? "ring-1 ring-ink" : ""}`}
-                      />
-                    ))}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+                        className={`flex h-6 w-6 items-center justify-center rounded-full font-body text-sm ${
+                          inMonth ? "" : "text-ink-soft/50"
+                        } ${isToday ? "bg-ink text-paper" : ""}`}
+                      >
+                        {date.getDate()}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Corsie con le barre eventi */}
+              <div className="space-y-0.5 px-1 pb-1 pt-0.5">
+                {lanes.map((lane, li) => (
+                  <div key={li} className="grid grid-cols-7 gap-0.5">
+                    {lane.map((seg) => {
+                      const multi = !isSingleDay(
+                        seg.event.start_date,
+                        seg.event.end_date,
+                      );
+                      return (
+                        <Link
+                          key={seg.event.id}
+                          href={`/eventi/${seg.event.id}`}
+                          title={seg.event.title}
+                          style={{
+                            gridColumn: `${seg.startIdx + 1} / span ${seg.span}`,
+                          }}
+                          className={`block truncate px-1 text-[11px] font-medium leading-5 text-ink hover:brightness-95 ${
+                            multi ? "bg-accent-alt" : "bg-accent"
+                          } ${seg.continuesLeft ? "" : "rounded-l"} ${
+                            seg.continuesRight ? "" : "rounded-r"
+                          }`}
+                        >
+                          {saved.has(seg.event.id) && "✓ "}
+                          {seg.continuesLeft && "… "}
+                          {seg.event.title}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
       </div>
+
+      {/* Card del mese a scorrimento orizzontale */}
+      {events.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="font-head text-lg font-semibold capitalize">
+            {t("eventsOf", { month: monthLabel })}
+          </h3>
+          {monthEvents.length > 0 ? (
+            <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-0.5 pb-2 pt-1">
+              {monthEvents.map((e) => (
+                <div key={e.id} className="w-64 shrink-0 snap-start sm:w-72">
+                  <EventCard event={e} saved={saved.has(e.id)} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="font-body text-sm text-ink-soft">
+              {t("noEventsMonth")}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Dettaglio giorno selezionato */}
       {selected && selectedEvents.length > 0 && (
@@ -188,7 +298,7 @@ export default function EventCalendar({
                 className="card flex items-center gap-3 p-3 hover:bg-paper-soft"
               >
                 <span
-                  className={`mt-0.5 inline-block h-3 w-3 shrink-0 rounded-full ${
+                  className={`inline-block h-3 w-3 shrink-0 rounded-full ${
                     isSingleDay(e.start_date, e.end_date)
                       ? "bg-accent"
                       : "bg-accent-alt"
@@ -200,14 +310,15 @@ export default function EventCalendar({
                     {saved.has(e.id) && (
                       <span
                         className="ml-1 text-accent-deep"
-                        title="Salvato nel tuo calendario"
+                        title={t("savedTitle")}
                       >
                         ✓
                       </span>
                     )}
                   </span>
                   <span className="block font-body text-sm text-ink-soft">
-                    {formatDateRange(e.start_date, e.end_date)} · {formatRoute(e)}
+                    {formatDateRange(e.start_date, e.end_date, locale)} ·{" "}
+                    {formatRoute(e)}
                   </span>
                 </span>
               </Link>
@@ -218,7 +329,7 @@ export default function EventCalendar({
 
       {events.length === 0 && (
         <p className="py-8 text-center font-body text-ink-soft">
-          Nessun evento trovato con questi filtri.
+          {t("noEventsFilters")}
         </p>
       )}
     </div>

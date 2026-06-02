@@ -1,14 +1,27 @@
+"use client";
+
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import type { EventRow } from "@/lib/types/db";
-import { formatDateRange, durationLabel } from "@/lib/utils/dates";
+import { formatDateRange, isSingleDay } from "@/lib/utils/dates";
 import { formatRoute } from "@/lib/utils/location";
 import { coverUrl } from "@/lib/utils/storage";
+import type { Locale } from "@/i18n/config";
 
-export default function EventCard({ event }: { event: EventRow }) {
+export default function EventCard({
+  event,
+  saved = false,
+}: {
+  event: EventRow;
+  saved?: boolean;
+}) {
   const url = coverUrl(event.cover_image_key);
+  const t = useTranslations("card");
+  const locale = useLocale() as Locale;
+  const single = isSingleDay(event.start_date, event.end_date);
 
   return (
-    <Link href={`/eventi/${event.id}`} className="card group overflow-hidden">
+    <Link href={`/eventi/${event.id}`} className="card group block overflow-hidden">
       <div className="relative aspect-[16/9] w-full overflow-hidden bg-paper-soft">
         {url ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -23,12 +36,17 @@ export default function EventCard({ event }: { event: EventRow }) {
           </div>
         )}
         <span className="chip absolute left-2 top-2 bg-paper/90 text-xs">
-          {durationLabel(event.start_date, event.end_date)}
+          {single ? t("oneDay") : t("multiDay")}
         </span>
+        {saved && (
+          <span className="chip chip-active absolute right-2 top-2 text-xs font-medium shadow-sm">
+            {t("savedBadge")}
+          </span>
+        )}
       </div>
       <div className="p-3">
         <p className="font-body text-sm text-accent-deep">
-          {formatDateRange(event.start_date, event.end_date)}
+          {formatDateRange(event.start_date, event.end_date, locale)}
         </p>
         <h3 className="font-head text-xl font-semibold leading-tight">
           {event.title}

@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import EventCalendar from "@/components/events/EventCalendar";
 import EventFilters from "@/components/events/EventFilters";
@@ -12,6 +13,7 @@ export default async function HomePage({
   searchParams: Promise<{ region?: string; duration?: string }>;
 }) {
   const { region, duration } = await searchParams;
+  const t = await getTranslations("home");
   const supabase = await createClient();
 
   let query = supabase
@@ -48,18 +50,16 @@ export default async function HomePage({
     <div className="space-y-4">
       <div>
         <h1 className="font-head text-4xl font-bold leading-none">
-          Calendario pubblico
+          {t("title")}
         </h1>
-        <p className="font-body text-ink-soft">
-          Pedalate cicloturistiche non competitive in Italia
-        </p>
+        <p className="font-body text-ink-soft">{t("subtitle")}</p>
       </div>
 
       <EventFilters />
 
       {error ? (
         <p className="card p-4 font-body text-red-700">
-          Errore nel caricamento degli eventi. Hai configurato Supabase? ({error.message})
+          {t("loadError", { message: error.message })}
         </p>
       ) : (
         <EventCalendar events={events} savedIds={savedIds} />

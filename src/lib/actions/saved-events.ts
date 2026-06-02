@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 
 export async function saveEvent(eventId: string) {
@@ -8,7 +9,10 @@ export async function saveEvent(eventId: string) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "Devi accedere per salvare un evento." };
+  if (!user) {
+    const t = await getTranslations("errors");
+    return { error: t("saveLoginRequired") };
+  }
 
   const { error } = await supabase
     .from("saved_events")
@@ -27,7 +31,10 @@ export async function unsaveEvent(eventId: string) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "Devi accedere." };
+  if (!user) {
+    const t = await getTranslations("errors");
+    return { error: t("loginRequiredShort") };
+  }
 
   const { error } = await supabase
     .from("saved_events")

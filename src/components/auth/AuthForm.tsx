@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 
 type Action = (
   prev: unknown,
@@ -15,12 +16,13 @@ export default function AuthForm({
   submitLabel: string;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
+  const t = useTranslations("auth");
 
   return (
     <form action={formAction} className="space-y-4">
       <div>
         <label className="field-label" htmlFor="email">
-          Email
+          {t("email")}
         </label>
         <input
           id="email"
@@ -33,7 +35,7 @@ export default function AuthForm({
       </div>
       <div>
         <label className="field-label" htmlFor="password">
-          Password
+          {t("password")}
         </label>
         <input
           id="password"
@@ -51,7 +53,7 @@ export default function AuthForm({
       )}
 
       <button type="submit" disabled={pending} className="btn btn-primary w-full disabled:opacity-60">
-        {pending ? "..." : submitLabel}
+        {pending ? t("loading") : submitLabel}
       </button>
     </form>
   );

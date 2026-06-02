@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { getLocale, getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth/require-user";
 import EventGrid from "@/components/events/EventGrid";
 import StatusBadge from "@/components/proposals/StatusBadge";
 import { formatDateRange } from "@/lib/utils/dates";
 import type { EventRow, ProposalRow } from "@/lib/types/db";
+import type { Locale } from "@/i18n/config";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +18,8 @@ export default async function CalendarioPage({
   const user = await requireUser();
   const { tab } = await searchParams;
   const activeTab = tab === "proposte" ? "proposte" : "salvati";
+  const t = await getTranslations("myCalendar");
+  const locale = (await getLocale()) as Locale;
 
   const supabase = await createClient();
 
@@ -41,10 +45,10 @@ export default async function CalendarioPage({
     <div className="space-y-4">
       <div className="flex items-end justify-between">
         <h1 className="font-head text-4xl font-bold leading-none">
-          Il mio calendario
+          {t("title")}
         </h1>
         <Link href="/proponi" className="chip chip-active whitespace-nowrap">
-          + Proponi
+          {t("propose")}
         </Link>
       </div>
 
@@ -58,7 +62,7 @@ export default async function CalendarioPage({
               : "border-transparent text-ink-soft"
           }`}
         >
-          Salvati ({savedEvents.length})
+          {t("savedTab", { count: savedEvents.length })}
         </Link>
         <Link
           href="/calendario?tab=proposte"
@@ -68,7 +72,7 @@ export default async function CalendarioPage({
               : "border-transparent text-ink-soft"
           }`}
         >
-          Le mie proposte ({proposals.length})
+          {t("proposalsTab", { count: proposals.length })}
         </Link>
       </div>
 
@@ -77,9 +81,9 @@ export default async function CalendarioPage({
           <EventGrid events={savedEvents} />
         ) : (
           <p className="py-12 text-center font-body text-ink-soft">
-            Non hai ancora salvato eventi.{" "}
+            {t("noSaved")}{" "}
             <Link href="/" className="text-accent-deep underline">
-              Esplora il calendario
+              {t("explore")}
             </Link>
           </p>
         )
@@ -91,14 +95,15 @@ export default async function CalendarioPage({
                 <div className="min-w-0">
                   <p className="font-head text-lg leading-tight">{p.title}</p>
                   <p className="font-body text-sm text-ink-soft">
-                    {p.region} · {formatDateRange(p.start_date, p.end_date)}
+                    {p.region} ·{" "}
+                    {formatDateRange(p.start_date, p.end_date, locale)}
                   </p>
                 </div>
                 <StatusBadge status={p.status} />
               </div>
               {p.status === "rejected" && p.rejection_reason && (
                 <p className="mt-2 font-body text-sm text-red-700">
-                  Motivo: {p.rejection_reason}
+                  {t("reason", { reason: p.rejection_reason })}
                 </p>
               )}
             </li>
@@ -106,9 +111,9 @@ export default async function CalendarioPage({
         </ul>
       ) : (
         <p className="py-12 text-center font-body text-ink-soft">
-          Non hai ancora proposto eventi.{" "}
+          {t("noProposals")}{" "}
           <Link href="/proponi" className="text-accent-deep underline">
-            Proponi il primo
+            {t("proposeFirst")}
           </Link>
         </p>
       )}
