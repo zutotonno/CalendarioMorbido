@@ -4,92 +4,139 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Status
 
-CalendarioMorbido is a **web application for tracking non-competitive cyclo-tourism events in Italy**. The project is currently in the **design/planning phase** — functional analysis, wireframes, and architectural decisions are complete, but no implementation code exists yet. There are no build commands, test suites, or package configuration files.
+CalendarioMorbido is a **web application for tracking non-competitive cyclo-tourism events in Italy**. The MVP is **implemented and deployable**. The original planned stack (Fastify + Drizzle + Better Auth + Railway) was replaced with a faster stack for the MVP: **Next.js App Router + Supabase + Vercel**.
+
+Docs and wireframes from the planning phase have been moved to `docs/archive/` — ignore that folder.
+
+## Tech Stack
+
+| Layer         | Choice                                                       |
+| ------------- | ------------------------------------------------------------ |
+| Frontend      | Next.js 15 (App Router, TypeScript, `src/`), Tailwind CSS v3 |
+| Database      | Supabase (PostgreSQL)                                        |
+| Auth          | Supabase Auth (email/password, `@supabase/ssr`)              |
+| Storage       | Supabase Storage — public bucket `covers`, path `covers/{user_id}/{uuid}-{filename}` |
+| Hosting       | Vercel                                                       |
+| i18n          | next-intl (messages in `messages/en.json` and `messages/it.json`) |
+| Package mgr   | pnpm                                                         |
 
 ## Repository Structure
 
 ```
-docs/
-├── functional-analysis.md               # MVP requirements, user roles, feature specs
-└── implementation-analysis/
-    ├── implementation-analysis.md       # Index — stack, auth, data model, API surface
-    ├── stack.md                         # Hosting, framework, DB, map, migrations
-    ├── authentication.md               # Auth options comparison and decision
-    ├── model-proposal.md               # Drizzle schema, tables, enums, design notes
-    └── api-surface.md                  # REST endpoints, pagination, approval flow
+CLAUDE.md
+SETUP.md                             # Step-by-step deploy instructions
+next-steps.md                        # Pending MVP tasks
 
-prototype/wireframes/SINTESI.md          # Wireframe analysis with pros/cons per screen
-prototype/wireframes/calendariomorbido-wireframes.html  # Interactive HTML prototype
+messages/
+  en.json                            # English translations
+  it.json                            # Italian translations
+
+middleware.ts                        # Supabase session refresh + next-intl routing
+
+supabase/migrations/
+  0001_init.sql                      # Schema, RLS, functions, storage bucket
+  0002_seed.sql                      # ~11 sample approved events
+  0003_location_and_delete.sql
+  0004_update_event.sql
+
+src/app/
+  layout.tsx                         # Root layout (Header, Footer)
+  globals.css                        # OKLch theme variables, warm-paper aesthetic
+  page.tsx                           # "/" Public calendar
+  eventi/[id]/page.tsx               # Event detail
+  accedi/page.tsx                    # Login
+  registrati/page.tsx                # Sign up
+  calendario/page.tsx                # Personal calendar [auth]
+  proponi/page.tsx                   # Propose event [auth]
+  gestore/page.tsx                   # Admin area [admin]
+  gestore/eventi/[id]/modifica/page.tsx  # Edit existing event [admin]
+  auth/signout/route.ts              # POST /auth/signout
+
+src/components/
+  layout/   Header.tsx, Footer.tsx, LocaleSwitcher.tsx, MobileNav.tsx
+  events/   EventCalendar.tsx, EventCard.tsx, EventFilters.tsx, EventForm.tsx,
+            EventGrid.tsx, SaveButton.tsx
+  proposals/  ProposalForm.tsx, StatusBadge.tsx
+  admin/    AdminProposalCard.tsx, DeleteEventButton.tsx
+  auth/     AuthForm.tsx
+  ui/       Toast.tsx
+
+src/lib/
+  supabase/  client.ts, server.ts, middleware.ts, admin.ts
+  actions/   admin.ts, auth.ts, event-fields.ts, proposals.ts, saved-events.ts
+  auth/      require-user.ts
+  constants/ regions.ts
+  types/     db.ts
+  utils/     dates.ts, location.ts, storage.ts
+  i18n/      config.ts, request.ts
+
+docs/archive/                        # Planning phase docs — IGNORE
 ```
-
-## Tech Stack (decided)
-
-| Layer            | Choice                                                                      |
-| ---------------- | --------------------------------------------------------------------------- |
-| Hosting          | Railway (all services)                                                      |
-| Frontend         | Next.js (TypeScript), server-side rendered                                  |
-| Backend          | Fastify (TypeScript), separate Railway service                              |
-| Database         | PostgreSQL on Railway                                                       |
-| ORM / Migrations | Drizzle ORM + drizzle-kit                                                   |
-| Auth             | Better Auth (self-hosted, runs inside Fastify)                              |
-| Map rendering    | MapLibre GL JS                                                              |
-| Map tiles        | MapTiler (free tier, OSM-based)                                             |
-| Blob storage     | Provider-agnostic via `StorageService` interface (key-based, not URL-based) |
-
-Migrations run as a pre-start command on Railway: `npx drizzle-kit migrate && node server.js`.
 
 ## Domain
 
 ### User Roles
 
-- **Guest**: browse public event calendar, apply filters, view event details and map
-- **Registered User**: save events to personal calendar, propose new events, track proposal status (pending / approved / rejected)
-- **Administrator**: approve or reject proposals via direct DB access (MVP)
+- **Guest**: browse public event calendar, apply filters, view event details
+- **Registered User**: save events to personal calendar, propose new events, track proposal status (`pending | approved | rejected`)
+- **Administrator**: approve/reject proposals, edit and delete existing events
 
-### Data Model (summary)
+### Data Model
 
-- **`events`** — published events only. Created atomically when an admin approves a proposal.
-- **`proposals`** — user submissions. Status: `pending | approved | rejected`. Mirrors all event fields.
-- **`saved_events`** — junction table (userId × eventId) for personal calendars.
-- Better Auth manages `user`, `session`, `account`, `verification` tables. The `user` table is extended with a `role` field (`user | admin`).
+- **`profiles`** — extends `auth.users` with `role` (`user | admin`)
+- **`events`** — published events only; created atomically when admin approves a proposal
+- **`proposals`** — user submissions; status `pending | approved | rejected`; mirrors all event fields plus `user_id`, `status`, `rejection_reason`, `reviewed_at`
+- **`saved_events`** — junction table (`user_id × event_id`) for personal calendars
 
-Blob storage uses a `coverImageKey` (e.g. `"covers/abc123.jpg"`) rather than a full URL. The `StorageService` resolves keys to presigned URLs at runtime — swapping providers requires no DB migration.
+Cover images stored in Supabase Storage; DB holds only the key (`cover_image_key`). Public bucket — no signed URLs needed.
 
-### API Surface (summary)
+### Key SQL Functions
 
-REST API under `/api`. Paginated responses use an envelope: `{ data, total, page, limit }`.
+- `is_admin()` — SECURITY DEFINER, bypasses RLS; used in policies to avoid recursion
+- `approve_proposal(p_proposal_id uuid)` — atomic RPC: inserts event + updates proposal in one transaction with `SELECT … FOR UPDATE` lock
 
-- `GET /api/events` — public event list (filters: region, type)
-- `GET /api/events/map` — lightweight marker payload for the map
-- `GET /api/events/:id` — event detail
-- `GET|PUT|DELETE /api/me/saved-events` — personal calendar management
-- `GET|POST /api/me/proposals` — user's own proposals
-- `GET|PATCH /api/admin/proposals` — admin approval queue
-- `POST /api/uploads/presign` — presigned URL for direct image upload
+## Build & Dev Commands
 
-Full endpoint details: `docs/implementation-analysis/api-surface.md`.
+```bash
+pnpm install
+pnpm dev       # http://localhost:3000
+pnpm build
+pnpm lint
+```
 
-## Design (open decisions)
+Environment variables required (see `.env.example`):
+```
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY   # optional for MVP
+```
 
-The wireframes explore two layout variants per screen — none have been chosen yet:
+## MVP Simplifications (intentional)
 
-| Screen            | Variant A               | Variant B                      |
-| ----------------- | ----------------------- | ------------------------------ |
-| Public Calendar   | Density (list-heavy)    | Visual exploration (card grid) |
-| Map View          | Immersive (map primary) | Hybrid (split map/list)        |
-| Event Details     | Hero image layout       | Structured card layout         |
-| Personal Calendar | Agenda view             | Grid with tabs                 |
-| Propose Event     | Single long form        | Step wizard                    |
-| Admin Queue       | Inline actions          | Single-event review            |
+- Email confirmation **OFF** (immediate signup)
+- Public storage bucket (no signed URLs)
+- No pagination (small dataset)
+- Map view: **not implemented** — placeholder only (out of MVP scope)
+- Coordinates entered manually in proposal form
+- Admin promoted via SQL (`update public.profiles set role='admin' where ...`)
+- No automated tests
 
-Other open design questions: mandatory vs optional fields in the proposal form, login/registration flow.
+## Out of MVP Scope (ignore for now)
 
-Mobile-first. Warm paper aesthetic with cycling-green hi-vis accent. Italian-language UI throughout.
+- Map view (MapLibre/MapTiler)
+- Temporal filters on map
+- Recurring events
+- AI-assisted event scraping
+- Social/friend features
+
+## Design
+
+Mobile-first. Warm paper aesthetic (`--paper: oklch(0.985 0.006 95)`), cycling-green hi-vis accent (`--accent: oklch(0.84 0.19 128)`). Fonts: Caveat (headings) + Patrick Hand (body). Italian-language UI with i18n support (next-intl).
 
 ## HOW TO MANAGE DOCS
 
-In this mvp phase ignore all the `docs/archive` folder, since it is a brainstorming for a further project phase, not needed for now.
+Ignore `docs/archive/` — it contains planning-phase brainstorming not relevant to the MVP.
 
 ## LANGUAGE
 
-even if I talk to claude code throught terminal in other languages, always produce code artifacts, documentation, commit messages and all the persisted information about this project in English.
+Even if you interact with Claude Code in other languages, always produce code artifacts, documentation, commit messages, and all persisted project information in **English**.
